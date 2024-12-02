@@ -93,6 +93,7 @@ class TableViewWithBorders:
             self.header_canvas.create_text(
                 x1 + 10, y1 + _cell_height // 2,
                 text=f"Header {j}", anchor="w",
+                font=("Arial", 14, "bold"),
                 fill="black",
             )
 

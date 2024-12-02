@@ -6,8 +6,24 @@ root.title("Table View Example")
 root.geometry("400x300")
 
 # Create Treeview
+
+notebook = ttk.Notebook(root)
+
+# Create frames for tabs
+tab1 = ttk.Frame(notebook)
+tab2 = ttk.Frame(notebook)
+
+# Add tabs to the notebook
+notebook.add(tab1, text="Tab 1")
+notebook.add(tab2, text="Tab 2")
+
+notebook.pack(expand=True, fill="both")
+
+# Add content to tabs
+tk.Label(tab1, text="Content of Tab 1").pack(pady=20)
+
 columns = ("ID", "Name", "Age")
-table = ttk.Treeview(root, columns=columns, show="headings", height=10)
+table = ttk.Treeview(tab2, columns=columns, show="headings", height=10)
 table.pack(fill="both", expand=True)
 
 # Set column headings
