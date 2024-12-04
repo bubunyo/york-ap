@@ -7,16 +7,19 @@ from table_view import TableViewWithBorders
 
 
 class Gui(tk.Tk):
-    def __init__(self, import_hook):
+    def __init__(self, import_hook, check, apply_filter):
         super().__init__()
 
+        self.loading_dialog = None
         self.import_hook = import_hook
+        self.check = check
+        self.apply_filter = apply_filter
 
-        self.start = dt.datetime.now()
-        self.end = self.start + dt.timedelta(days=30)
+        self.start = None
+        self.end = None
 
         self.title("Student Activity Log Analysis")
-        self.minsize(1200, 500)
+        self.minsize(1200, 200)
         self.geometry("1200x500")
 
         # Configure the root window grid
@@ -30,46 +33,56 @@ class Gui(tk.Tk):
 
         # tabs
         notebook = ttk.Notebook(self)
-        # notebook.pack(expand=True, fill="both")
         notebook.grid(row=1, column=0, sticky="nsew")
 
         # Create frames for tabs
-        tab_merge_data = ttk.Frame(notebook)
-        tab2 = ttk.Frame(notebook)
+        self.tab_merge_data = ttk.Frame(notebook)
+        self.tab_pivot_data_month = ttk.Frame(notebook)
+        self.tab_pivot_data_total = ttk.Frame(notebook)
+        self.tab_stats_month = ttk.Frame(notebook)
+        self.tab_stats_year = ttk.Frame(notebook)
+        self.tab_corr = ttk.Frame(notebook)
+        self.tab_graphs = ttk.Frame(notebook)
 
-        notebook.add(tab_merge_data, text="Tab 1")
-        notebook.add(tab2, text="Tab 2")
-
-        columns = ("ID", "Name", "Age")
-        table = ttk.Treeview(tab2, columns=columns, show="headings", height=10)
-        table.pack(fill="both", expand=True)
-
-        # Set column headings
-        for col in columns:
-            table.heading(col, text=col)
-            table.column(col, width=100)
-
-        # Add data to the table
-        data = [
-            (1, "Alice", 25),
-            (2, "Bob", 30),
-            (3, "Charlie", 22)
-        ]
-
-        for row in data:
-            table.insert("", "end", values=row)
+        notebook.add(self.tab_merge_data, text="Merged Data")
+        notebook.add(self.tab_pivot_data_month, text="Pivot Data (Monthly)")
+        notebook.add(self.tab_stats_month, text="Statistics (Monthly)")
+        notebook.add(self.tab_pivot_data_total, text="Pivot Data (Total)")
+        notebook.add(self.tab_stats_year, text="Statistics (Total)")
+        notebook.add(self.tab_corr, text="Correlation Matrix")
+        notebook.add(self.tab_graphs, text="Correlation Graphs")
 
         self._set_top_bar()
-        self._set_bottom_bar()
+        self.check()
 
-        TableViewWithBorders(tab_merge_data)
+    def show_merge_data(self, header, data):
+        TableViewWithBorders(self.tab_merge_data, header, data)
+
+    def show_pivot_data_month(self, header, data):
+        TableViewWithBorders(self.tab_pivot_data_month, header, data)
+
+    def show_pivot_data_total(self, header, data):
+        TableViewWithBorders(self.tab_pivot_data_total, header, data)
+
+    def show_stats_month(self, header, data):
+        TableViewWithBorders(self.tab_stats_month, header, data)
+
+    def show_stats_year(self, header, data):
+        TableViewWithBorders(self.tab_stats_year, header, data)
+
+    def show_corr(self, header, data):
+        TableViewWithBorders(self.tab_corr, header, data)
+
+    def show_graphs(self, header, data):
+        # TableViewWithBorders(tab_graph)
+        pass
 
     def _set_top_bar(self):
         tk.Label(self.top_frame, text="Filter by Date:").pack(side=tk.LEFT, padx=(10, 0))
         self.filter_label = tk.Label(self.top_frame)
         self.filter_label.pack(side=tk.LEFT, padx=(10, 0))
 
-        self.filter_button = tk.Button(self.top_frame, text="Set Date Range", command=self.filter_data)
+        self.filter_button = tk.Button(self.top_frame, text="Apply Date Range", command=self.filter_data)
         self.filter_button.pack(padx=4, pady=2, side=tk.LEFT)
         self._set_filter_text()
 
@@ -78,37 +91,31 @@ class Gui(tk.Tk):
 
         ttk.Separator(self.top_frame, orient="vertical").pack(fill="y", padx=10, pady=8, side=tk.LEFT)
 
-        tk.Label(self.top_frame, text="Generate Action:").pack(side=tk.LEFT)
-        self.action = ttk.Combobox(self.top_frame, values=["OUTPUT STATISTICS", "GRAPHS", "CORRELATION analysis"], state="readonly", width=18)
-        self.action.current(0)
-        self.action.pack(side="left", padx=0, pady=0)
-
-        self.apply_action_button = tk.Button(self.top_frame, text="Go!")
-        self.apply_action_button.pack(padx=4, side=tk.LEFT, anchor=tk.N)
-
-    def _set_bottom_bar(self):
-        # Bottom row
-        self.bottom_frame = tk.Frame(self, bg="white", height=50)
-        self.bottom_frame.grid(row=2, column=0, sticky="nsew")
-        self.bottom_frame.grid_propagate(False)
-
-        # Create a status bar
-        frame = tk.Frame(self.bottom_frame, bg="white")
-        frame.pack(fill="x")
-
-        self.status_bar = tk.Label(frame, text="Status: Ready", bg="white", fg="black", anchor=tk.W)
-        self.status_bar.grid(row=0, column=0, sticky="ew", padx=10)
-
-        self.log_button = tk.Button(frame, text="Show Logs", highlightbackground="white")
-        self.log_button.grid(row=0, column=1, pady=(0, 5), padx=5)
-        frame.grid_columnconfigure(0, weight=1)
-
     def _set_filter_text(self):
-        txt = f'{self.start.strftime("%d %b, %Y, %H:%M")} → {self.end.strftime("%d %b, %Y, %H:%M")}'
-        self.filter_label.config(text=txt)
+        if self.start and self.end:
+            txt = f'{self.start.strftime("%d %b, %Y, %H:%M")} → {self.end.strftime("%d %b, %Y, %H:%M")}'
+            self.filter_label.config(text=txt)
 
     def set_status(self, status: str):
-        self.status_bar.config(text=f"Status: {status}")
+        self.toggle_loading_dialog(False)
+
+        message = f"Message\n\n{status}"
+        dialog = tk.Toplevel(self)
+        dialog.title("Status Message")
+        dialog.geometry("300x100")
+        dialog.resizable(False, False)
+
+        dialog.transient(self)
+        dialog.grab_set()
+
+        # Add a label with the loading message
+        label = tk.Label(dialog, text=message, font=("Arial", 12))
+        label.pack(pady=20)
+
+        # Center the loading dialog on the screen
+        x = self.winfo_x() + (self.winfo_width() // 2) - 150
+        y = self.winfo_y() + (self.winfo_height() // 2) - 50
+        dialog.geometry(f"+{x}+{y}")
 
     def import_files(self):
         files = filedialog.askopenfilenames(
@@ -125,12 +132,42 @@ class Gui(tk.Tk):
         if picker.result is not None:
             self.start, self.end = picker.result
         self._set_filter_text()
+        self.apply_filter(self.start, self.end)
 
     def show_table_data(self, headers, data):
         if not isinstance(headers, tuple):
             self.set_status("improper header format")
-        pass
 
+    def set_dates(self, start_date, end_date):
+        self.start = start_date
+        self.end = end_date
+        self._set_filter_text()
 
-if __name__ == "__main__":
-    Gui(None).mainloop()
+    def toggle_loading_dialog(self, show=False):
+        if show:
+            message = "Loading and transforming data.\nPlease wait..."
+            self.loading_dialog = tk.Toplevel(self)
+            self.loading_dialog.title("Loading")
+            self.loading_dialog.geometry("300x100")
+            self.loading_dialog.resizable(False, False)
+
+            self.loading_dialog.protocol("WM_DELETE_WINDOW", lambda: None)
+
+            # Disable interactions with the main window
+            self.loading_dialog.transient(self)
+            self.loading_dialog.grab_set()
+
+            # Add a label with the loading message
+            label = tk.Label(self.loading_dialog, text=message, font=("Arial", 12))
+            label.pack(pady=20)
+
+            # Center the loading dialog on the screen
+            x = self.winfo_x() + (self.winfo_width() // 2) - 150
+            y = self.winfo_y() + (self.winfo_height() // 2) - 50
+            self.loading_dialog.geometry(f"+{x}+{y}")
+            # self.update()
+            self.update_idletasks()
+        else:
+            if self.loading_dialog:
+                self.loading_dialog.destroy()
+                self.loading_dialog = None
