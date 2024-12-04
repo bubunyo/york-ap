@@ -53,27 +53,45 @@ class Gui(tk.Tk):
         notebook.add(self.tab_graphs, text="Correlation Graphs")
 
         self._set_top_bar()
-        self.check()
+        self.after_idle(self._on_start)
+
+    def _on_start(self):
+        print(">>>>>>>>>>>>>>> on start")
+        if self.check():
+            self.apply_filter()
+
+    @staticmethod
+    def _clear_frame(frame):
+        # Iterate through all widgets in the frame and destroy them
+        for widget in frame.winfo_children():
+            widget.destroy()
 
     def show_merge_data(self, header, data):
+        self._clear_frame(self.tab_merge_data)
         TableViewWithBorders(self.tab_merge_data, header, data)
 
     def show_pivot_data_month(self, header, data):
+        self._clear_frame(self.tab_pivot_data_month)
         TableViewWithBorders(self.tab_pivot_data_month, header, data)
 
     def show_pivot_data_total(self, header, data):
+        self._clear_frame(self.tab_pivot_data_total)
         TableViewWithBorders(self.tab_pivot_data_total, header, data)
 
     def show_stats_month(self, header, data):
+        self._clear_frame(self.tab_stats_month)
         TableViewWithBorders(self.tab_stats_month, header, data)
 
     def show_stats_year(self, header, data):
+        self._clear_frame(self.tab_stats_year)
         TableViewWithBorders(self.tab_stats_year, header, data)
 
     def show_corr(self, header, data):
+        self._clear_frame(self.tab_corr)
         TableViewWithBorders(self.tab_corr, header, data)
 
     def show_graphs(self, header, data):
+        # self._clear_frame(self.tab_graph)
         # TableViewWithBorders(tab_graph)
         pass
 
