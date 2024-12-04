@@ -56,9 +56,10 @@ class Gui(tk.Tk):
         self.after_idle(self._on_start)
 
     def _on_start(self):
-        print(">>>>>>>>>>>>>>> on start")
         if self.check():
             self.apply_filter()
+            self.load_csv_button.destroy()
+            self.load_csv_button = None
 
     @staticmethod
     def _clear_frame(frame):
@@ -67,6 +68,8 @@ class Gui(tk.Tk):
             widget.destroy()
 
     def show_merge_data(self, header, data):
+        if self.load_csv_button:
+           self.load_csv_button.destroy()
         self._clear_frame(self.tab_merge_data)
         TableViewWithBorders(self.tab_merge_data, header, data)
 
