@@ -7,7 +7,7 @@ _scrollbar_width = 16
 _header_color = "grey"
 
 
-class TableViewWithBorders:
+class TableView:
     def __init__(self, root, header, data):
 
         self.container = tk.Canvas(root, highlightthickness=0)

@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import filedialog, ttk
-import datetime as dt
 
 from date_picker import DateTimePickerRange
 from table_view import TableViewWithBorders
@@ -69,7 +68,7 @@ class Gui(tk.Tk):
 
     def show_merge_data(self, header, data):
         if self.load_csv_button:
-           self.load_csv_button.destroy()
+            self.load_csv_button.destroy()
         self._clear_frame(self.tab_merge_data)
         TableViewWithBorders(self.tab_merge_data, header, data)
 
